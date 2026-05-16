@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azerimed - Qorunan Sənəd</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .login-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .login-box h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .login-box .subtitle {
+            color: #999;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            color: #666;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .viewer-container {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        .toolbar {
+            background: #2c3e50;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .toolbar-left {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .toolbar-right {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .toolbar button {
+            background: #34495e;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .toolbar button:hover {
+            background: #1a252f;
+        }
+
+        .toolbar button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .page-input {
+            width: 60px;
+            padding: 6px 10px;
+            border: 1px solid #555;
+            border-radius: 4px;
+            color: white;
+            background: #34495e;
+            text-align: center;
+        }
+
+        .page-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .pdf-viewer {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f0f2f5;
+        }
+
+        .pdf-canvas-container {
+            position: relative;
+            display: inline-block;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            background: white;
+            margin: 20px;
+        }
+
+        canvas {
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .watermark-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 60px;
+            color: rgba(200, 0, 0, 0.15);
+            font-weight: bold;
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 10;
+            text-align: center;
+            line-height: 1.2;
+            width: 150%;
+            height: 150%;
+        }
+
+        .protection-notice {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .info-panel {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px;
+            border-radius: 4px;
+            color: #856404;
+            font-size: 13px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-panel.show {
+            display: flex;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Qoruma: Copy, Select, Context Menu */
+        * {
+            -webkit-user-select: none !important;
+            -moz-user-select: none !important;
+            -ms-user-select: none !important;
+            user-select: none !important;
+        }
+
+        /* Print qorumas */
+        @media print {
+            body { display: none !important; }
+        }
+
+        .logout-btn {
+            background: #e74c3c;
+        }
+
+        .logout-btn:hover {
+            background: #c0392b;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Səhifəsi -->
+    <div id="loginContainer" class="login-container">
+        <div class="login-box">
+            <h1>🔒 Qorunan Sənəd</h1>
+            <p class="subtitle">Azerimed MMC - Layihə Sənədi</p>
+            
+            <div class="form-group">
+                <label for="passwordInput">Şifrə</label>
+                <input 
+                    type="password" 
+                    id="passwordInput" 
+                    placeholder="Şifrəni daxil edin"
+                    autocomplete="off"
+                >
+            </div>
+
+            <button class="login-btn" id="loginBtn">Daxil ol</button>
+            <div class="error-message" id="errorMessage"></div>
+        </div>
+    </div>
+
+    <!-- Viewer Səhifəsi -->
+    <div id="viewerContainer" class="viewer-container">
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <button id="prevBtn" title="Əvvəlki səhifə">← Əvvəl</button>
+                <input 
+                    type="number" 
+                    id="pageInput" 
+                    class="page-input" 
+                    min="1" 
+                    value="1"
+                    title="Səhifə nömrəsi"
+                >
+                <span id="pageCount">/ 1</span>
+                <button id="nextBtn" title="Sonrakı səhifə">Sonra →</button>
+                <button id="zoomInBtn" title="Böyüt">🔍+</button>
+                <button id="zoomOutBtn" title="Kiçilt">🔍-</button>
+            </div>
+            <div class="toolbar-right">
+                <span id="docInfo">Azerimed - Layihə Sənədi</span>
+                <button id="logoutBtn" class="logout-btn">Çıxış</button>
+            </div>
+        </div>
+
+        <div class="info-panel" id="infoPanel">
+            🔐 Bu sənəd qorunmuşdur. Bütün dəyişmə, kopyalama, print etmə cəhdləri qeyd olunur.
+        </div>
+
+        <div class="pdf-viewer" id="pdfViewer">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Sənəd yüklənir...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        let sessionId = localStorage.getItem('sessionId');
+        let currentPage = 1;
+        let totalPages = 0;
+        let zoomLevel = 1;
+        let pdfDoc = null;
+        let canvasList = [];
+
+        // PDF.js setup
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        // ==================== LOGIN ====================
+        document.getElementById('loginBtn').addEventListener('click', login);
+        document.getElementById('passwordInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') login();
+        });
+
+        async function login() {
+            const password = document.getElementById('passwordInput').value;
+            const errorEl = document.getElementById('errorMessage');
+
+            if (!password) {
+                errorEl.textContent = '⚠️ Şifrəni daxil edin';
+                errorEl.style.display = 'block';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    errorEl.textContent = '❌ Şifrə səhvdir';
+                    errorEl.style.display = 'block';
+                    logScreenshot('failed_login');
+                    return;
+                }
+
+                sessionId = data.sessionId;
+                localStorage.setItem('sessionId', sessionId);
+                
+                errorEl.style.display = 'none';
+                showViewer();
+                loadPDF();
+            } catch (err) {
+                errorEl.textContent = '⚠️ Xəta: ' + err.message;
+                errorEl.style.display = 'block';
+            }
+        }
+
+        // ==================== VIEWER ====================
+        function showViewer() {
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('viewerContainer').style.display = 'flex';
+            document.getElementById('infoPanel').classList.add('show');
+        }
+
+        async function loadPDF() {
+            try {
+                const response = await fetch(`${API_BASE}/api/pdf`, {
+                    headers: { 'X-Session-Id': sessionId }
+                });
+
+                if (!response.ok) throw new Error('Unauthorized');
+
+                const arrayBuffer = await response.arrayBuffer();
+                pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                totalPages = pdfDoc.numPages;
+
+                document.getElementById('pageCount').textContent = `/ ${totalPages}`;
+                await renderPage(1);
+            } catch (err) {
+                alert('❌ PDF yükləmə xətası: ' + err.message);
+                logout();
+            }
+        }
+
+        async function renderPage(pageNum) {
+            if (pageNum < 1 || pageNum > totalPages) return;
+
+            currentPage = pageNum;
+            document.getElementById('pageInput').value = pageNum;
+
+            try {
+                const page = await pdfDoc.getPage(pageNum);
+                const scale = 1.5 * zoomLevel;
+                const viewport = page.getViewport({ scale });
+
+                const container = document.getElementById('pdfViewer');
+                container.innerHTML = '';
+
+                const canvasDiv = document.createElement('div');
+                canvasDiv.className = 'pdf-canvas-container';
+
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+
+                await page.render({
+                    canvasContext: context,
+                    viewport: viewport
+                }).promise;
+
+                canvasDiv.appendChild(canvas);
+
+                // Watermark əlavə et
+                const watermark = document.createElement('div');
+                watermark.className = 'watermark-overlay';
+                watermark.innerHTML = `© Ramiz Ələkbərov Professor<br>Məxfi Sənəd<br>${new Date().toLocaleDateString('az-AZ')}`;
+                canvasDiv.appendChild(watermark);
+
+                // Protection notice
+                const notice = document.createElement('div');
+                notice.className = 'protection-notice';
+                notice.textContent = '🔒 Qorunan Sənəd - Səhifə ' + pageNum;
+                canvasDiv.appendChild(notice);
+
+                container.appendChild(canvasDiv);
+
+                // Log page view
+                logPageView(pageNum, 5000);
+            } catch (err) {
+                console.error('Render error:', err);
+            }
+        }
+
+        // ==================== NAVIGATION ====================
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentPage > 1) renderPage(currentPage - 1);
+        });
+
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (currentPage < totalPages) renderPage(currentPage + 1);
+        });
+
+        document.getElementById('pageInput').addEventListener('change', () => {
+            const page = parseInt(document.getElementById('pageInput').value);
+            if (!isNaN(page)) renderPage(page);
+        });
+
+        document.getElementById('zoomInBtn').addEventListener('click', () => {
+            zoomLevel = Math.min(zoomLevel + 0.2, 3);
+            renderPage(currentPage);
+        });
+
+        document.getElementById('zoomOutBtn').addEventListener('click', () => {
+            zoomLevel = Math.max(zoomLevel - 0.2, 0.5);
+            renderPage(currentPage);
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+
+        // ==================== SECURITY ====================
+        // Copy qorumas
+        document.addEventListener('copy', (e) => {
+            e.preventDefault();
+            logScreenshot('copy_attempt');
+        });
+
+        // Right-click qorumas
+        document.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            logScreenshot('right_click');
+        });
+
+        // Print qorumas
+        document.addEventListener('keydown', (e) => {
+            // Ctrl+P, Cmd+P
+            if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+                e.preventDefault();
+                logScreenshot('print_attempt');
+                alert('❌ Çap etmə əngəllidir');
+            }
+            // Ctrl+S (Save)
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                logScreenshot('save_attempt');
+                alert('❌ Saxlama əngəllidir');
+            }
+            // F12 (DevTools)
+            if (e.key === 'F12') {
+                e.preventDefault();
+                logScreenshot('devtools_attempt');
+            }
+        });
+
+        // DevTools detection
+        let devtools = { open: false };
+        const threshold = 160;
+
+        setInterval(() => {
+            if (window.outerHeight - window.innerHeight > threshold || 
+                window.outerWidth - window.innerWidth > threshold) {
+                if (!devtools.open) {
+                    devtools.open = true;
+                    logScreenshot('devtools_open');
+                    console.warn('%c⚠️ DevTools istifadə etmə qadağan olunmuşdur!', 'color: red; font-size: 16px');
+                }
+            } else {
+                devtools.open = false;
+            }
+        }, 500);
+
+        // Screenshot detection
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                logScreenshot('screenshot_attempt');
+            }
+        });
+
+        // ==================== LOGGING ====================
+        async function logPageView(page, duration) {
+            try {
+                await fetch(`${API_BASE}/api/log-page-view`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Session-Id': sessionId
+                    },
+                    body: JSON.stringify({ page, duration })
+                });
+            } catch (err) {
+                console.error('Logging error:', err);
+            }
+        }
+
+        async function logScreenshot(tool) {
+            try {
+                await fetch(`${API_BASE}/api/log-screenshot`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Session-Id': sessionId
+                    },
+                    body: JSON.stringify({ tool })
+                });
+            } catch (err) {
+                console.error('Logging error:', err);
+            }
+        }
+
+        // ==================== LOGOUT ====================
+        function logout() {
+            localStorage.removeItem('sessionId');
+            sessionId = null;
+            document.getElementById('viewerContainer').style.display = 'none';
+            document.getElementById('loginContainer').style.display = 'flex';
+            document.getElementById('passwordInput').value = '';
+            location.reload();
+        }
+
+        // Check auth on load
+        if (sessionId) {
+            showViewer();
+            loadPDF();
+        }
+    </script>
+</body>
+</html>

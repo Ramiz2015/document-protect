@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Azerimed</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+        }
+
+        .header .subtitle {
+            color: #999;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .auth-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .auth-form {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .auth-form input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .auth-form button {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .auth-form button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+
+        .logs-container {
+            display: none;
+        }
+
+        .logs-container.show {
+            display: block;
+        }
+
+        .log-filters {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .filter-group label {
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .log-table {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #2c3e50;
+            color: white;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+            border-bottom: 2px solid #34495e;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 13px;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #f5f5f5;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .action-login_success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .action-failed_login {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .action-pdf_accessed {
+            background: #cfe2ff;
+            color: #084298;
+        }
+
+        .action-page_viewed {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        .action-screenshot_attempt,
+        .action-copy_attempt,
+        .action-print_attempt,
+        .action-devtools_attempt {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .session-id {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: #666;
+            word-break: break-all;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card .label {
+            color: #999;
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .stat-card .details {
+            font-size: 12px;
+            color: #bbb;
+            margin-top: 10px;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .export-btn {
+            padding: 8px 16px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .export-btn:hover {
+            background: #218838;
+        }
+
+        .refresh-btn {
+            padding: 8px 16px;
+            background: #17a2b8;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s;
+            margin-left: 10px;
+        }
+
+        .refresh-btn:hover {
+            background: #138496;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>📊 Admin Dashboard</h1>
+                <p class="subtitle">Azerimed - Access Logs & Statistics</p>
+            </div>
+            <button class="export-btn" id="exportBtn">📥 Export JSON</button>
+        </div>
+
+        <div class="auth-panel">
+            <div class="auth-form">
+                <input 
+                    type="password" 
+                    id="adminKeyInput" 
+                    placeholder="Admin Key daxil edin"
+                    autocomplete="off"
+                >
+                <button id="loginBtn">Daxil ol</button>
+            </div>
+            <div id="error" class="error"></div>
+        </div>
+
+        <div id="logsContainer" class="logs-container">
+            <div class="toolbar">
+                <button class="refresh-btn" id="refreshBtn">🔄 Yenilə</button>
+            </div>
+
+            <div class="stats" id="stats"></div>
+
+            <div class="log-filters">
+                <div class="filter-group">
+                    <label for="actionFilter">Fəaliyyət:</label>
+                    <select id="actionFilter">
+                        <option value="">Hamısı</option>
+                        <option value="login_success">Uğurlu Giriş</option>
+                        <option value="failed_login">Uğursuz Giriş</option>
+                        <option value="pdf_accessed">PDF Açıldı</option>
+                        <option value="page_viewed">Səhifə Baxıldı</option>
+                        <option value="screenshot_attempt">Screenshot Cəhdi</option>
+                        <option value="copy_attempt">Copy Cəhdi</option>
+                        <option value="print_attempt">Print Cəhdi</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="sessionFilter">Session:</label>
+                    <input type="text" id="sessionFilter" placeholder="Session ID" style="width: 200px;">
+                </div>
+            </div>
+
+            <div class="log-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Vaxt</th>
+                            <th>Fəaliyyət</th>
+                            <th>Session ID</th>
+                            <th>IP Address</th>
+                            <th>Platform</th>
+                            <th>Detallar</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logTable">
+                        <tr>
+                            <td colspan="6" class="no-data">Logları görmək üçün admin key-i daxil edin</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        let allLogs = [];
+        let isAuthenticated = false;
+
+        document.getElementById('loginBtn').addEventListener('click', login);
+        document.getElementById('adminKeyInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') login();
+        });
+
+        document.getElementById('actionFilter').addEventListener('change', filterLogs);
+        document.getElementById('sessionFilter').addEventListener('input', filterLogs);
+        document.getElementById('exportBtn').addEventListener('click', exportJSON);
+        document.getElementById('refreshBtn').addEventListener('click', loadLogs);
+
+        async function login() {
+            const adminKey = document.getElementById('adminKeyInput').value;
+            const errorEl = document.getElementById('error');
+
+            if (!adminKey) {
+                errorEl.textContent = '⚠️ Admin Key-i daxil edin';
+                errorEl.classList.add('show');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/logs/${adminKey}`);
+                
+                if (!response.ok) {
+                    throw new Error('Invalid admin key');
+                }
+
+                allLogs = await response.json();
+                isAuthenticated = true;
+                errorEl.classList.remove('show');
+                
+                document.getElementById('logsContainer').classList.add('show');
+                document.querySelector('.auth-panel').style.background = '#d4edda';
+                
+                loadLogs();
+            } catch (err) {
+                errorEl.textContent = '❌ Səhv Admin Key';
+                errorEl.classList.add('show');
+            }
+        }
+
+        function loadLogs() {
+            renderStats();
+            filterLogs();
+        }
+
+        function renderStats() {
+            const stats = {
+                totalAccess: allLogs.length,
+                loginSuccess: allLogs.filter(l => l.action === 'login_success').length,
+                loginFailed: allLogs.filter(l => l.action === 'failed_login').length,
+                securityAttempts: allLogs.filter(l => ['screenshot_attempt', 'copy_attempt', 'print_attempt', 'devtools_attempt'].includes(l.action)).length,
+                uniqueSessions: new Set(allLogs.map(l => l.sessionId)).size,
+                uniqueIPs: new Set(allLogs.filter(l => l.ip).map(l => l.ip)).size
+            };
+
+            const statsEl = document.getElementById('stats');
+            statsEl.innerHTML = `
+                <div class="stat-card">
+                    <div class="label">Cəmi Müdaxilə</div>
+                    <div class="value">${stats.totalAccess}</div>
+                    <div class="details">Bütün fəaliyyətlər</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Uğurlu Girişlər</div>
+                    <div class="value" style="color: #28a745;">${stats.loginSuccess}</div>
+                    <div class="details">Düzgün şifrə ilə</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Uğursuz Girişlər</div>
+                    <div class="value" style="color: #dc3545;">${stats.loginFailed}</div>
+                    <div class="details">Səhv şifrə</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Təhlükə Cəhdləri</div>
+                    <div class="value" style="color: #ffc107;">${stats.securityAttempts}</div>
+                    <div class="details">Screenshot, Copy, Print vs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Unikal Sessionlər</div>
+                    <div class="value">${stats.uniqueSessions}</div>
+                    <div class="details">Fərqli istifadəçilər</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Unikal IP-lər</div>
+                    <div class="value">${stats.uniqueIPs}</div>
+                    <div class="details">Fərqli yerlərdən</div>
+                </div>
+            `;
+        }
+
+        function filterLogs() {
+            const actionFilter = document.getElementById('actionFilter').value;
+            const sessionFilter = document.getElementById('sessionFilter').value.toLowerCase();
+
+            let filtered = allLogs.filter(log => {
+                const matchAction = !actionFilter || log.action === actionFilter;
+                const matchSession = !sessionFilter || log.sessionId.toLowerCase().includes(sessionFilter);
+                return matchAction && matchSession;
+            });
+
+            renderTable(filtered);
+        }
+
+        function renderTable(logs) {
+            const tbody = document.getElementById('logTable');
+
+            if (logs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="no-data">Heç bir log tapılmadı</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = logs.map(log => `
+                <tr>
+                    <td>${new Date(log.timestamp).toLocaleString('az-AZ')}</td>
+                    <td>
+                        <span class="action-badge action-${log.action}">
+                            ${formatAction(log.action)}
+                        </span>
+                    </td>
+                    <td class="session-id">${log.sessionId.substring(0, 12)}...</td>
+                    <td>${log.ip || '-'}</td>
+                    <td>${log.platform || log.details?.platform || '-'}</td>
+                    <td>
+                        ${formatDetails(log)}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function formatAction(action) {
+            const map = {
+                'login_success': '✓ Giriş',
+                'failed_login': '✗ Uğursuz Giriş',
+                'pdf_accessed': '📄 PDF Açıldı',
+                'page_viewed': '📄 Səhifə Baxıldı',
+                'screenshot_attempt': '⚠️ Screenshot',
+                'copy_attempt': '⚠️ Copy',
+                'print_attempt': '⚠️ Print',
+                'devtools_attempt': '⚠️ DevTools',
+                'devtools_open': '⚠️ DevTools Açıq',
+                'unauthorized_pdf_access': '🚫 Rədd'
+            };
+            return map[action] || action;
+        }
+
+        function formatDetails(log) {
+            const d = log.details || log;
+            
+            if (log.action === 'page_viewed') {
+                return `Səhifə ${d.page} (${d.duration})`;
+            }
+            if (log.action === 'failed_login') {
+                return `Səbəb: ${d.reason}`;
+            }
+            if (['screenshot_attempt', 'copy_attempt', 'print_attempt', 'devtools_attempt'].includes(log.action)) {
+                return d.tool || 'Müəyyən deyil';
+            }
+            
+            return '-';
+        }
+
+        function exportJSON() {
+            const dataStr = JSON.stringify(allLogs, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `access-logs-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
